@@ -3,9 +3,21 @@ from diffusers import BitsAndBytesConfig, SD3Transformer2DModel
 from diffusers import StableDiffusion3Pipeline
 import torch
 import os
+# ==================== 1. 固定所有随机种子 ====================
+def set_seed(seed: int = 42):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True 
+    torch.backends.cudnn.benchmark = False 
+
+# 设置种子
+set_seed(42)
+
+# ==================== 2. 固定 generator ====================
+generator = torch.Generator(device="cuda").manual_seed(42)
 
 # 指定本地模型路径
-model_dir = "../models/sd3.5/"  # 确保这是你实际下载模型保存的路径
+model_dir = "D:/graduation/computer/Watermark/models/sd3.5"  # 确保这是你实际下载模型保存的路径
 
 # 检查模型是否存在
 if not os.path.exists(model_dir):
@@ -33,16 +45,21 @@ pipeline = StableDiffusion3Pipeline.from_pretrained(
 pipeline.enable_model_cpu_offload()
 print("Stable Diffusion 3管道创建完成。")
 
-prompt = ""
+from datasets import load_dataset, load_from_disk
+
+# 从本地磁盘加载已保存的数据集
+dataset = load_from_disk("D:/graduation/computer/Watermark/dataset/prompts/stable_diffusion_prompts")
+prompt = dataset['train'][0]['Prompt']
+print(f"使用的提示词: {prompt}")
 image = pipeline(
     prompt=prompt,
-    seed=55,
     height=512,
     width=512,
+    generator=generator,
     num_images_per_prompt=1,
     num_inference_steps=30,
     guidance_scale=4.5,
     max_sequence_length=512,
 ).images[0]
-image.save("./test/generated_image.png")
-print("图片已保存为 generated_image.png")
+image.save("../test/p1.png")
+print("图片已保存为 p1.png")
