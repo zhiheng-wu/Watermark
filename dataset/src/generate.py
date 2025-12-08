@@ -2,6 +2,7 @@ import json
 import os
 import torch
 import gc
+import time
 from diffusers import BitsAndBytesConfig, SD3Transformer2DModel
 from diffusers import StableDiffusion3Pipeline
 from datasets import load_from_disk
@@ -90,11 +91,66 @@ class SD3BatchImageGenerator:
     def _save_checkpoint(self, checkpoint_data: Dict):
         """保存检查点"""
         try:
+            # 创建可序列化的检查点数据副本
+            serializable_data = self._make_serializable(checkpoint_data.copy())
+            
             with open(self.checkpoint_file, 'w') as f:
-                json.dump(checkpoint_data, f, indent=2)
+                json.dump(serializable_data, f, indent=2, default=self._json_serialize_default)
         except Exception as e:
             self.logger.error(f"保存检查点失败: {e}")
     
+    def _make_serializable(self, data: Dict) -> Dict:
+        """确保数据可JSON序列化"""
+        # 特殊处理start_time字段
+        if 'start_time' in data and data['start_time'] is not None:
+            # 如果是CUDA事件或其他不可序列化对象，转换为时间戳或字符串
+            if hasattr(data['start_time'], 'cpu_time'):
+                # 对于CUDA事件，使用当前时间戳替代
+                data['start_time'] = time.time()
+            elif not isinstance(data['start_time'], (type(None), int, float, str)):
+                # 其他不可序列化类型转换为字符串表示
+                data['start_time'] = str(data['start_time'])
+        
+        return data
+    
+    def _json_serialize_default(self, obj):
+        """JSON序列化默认处理函数"""
+        if hasattr(obj, '__dict__'):
+            # 处理自定义对象
+            return obj.__dict__
+        elif hasattr(obj, 'item'):
+            # 处理PyTorch张量等有item()方法的对象
+            return obj.item()
+        elif isinstance(obj, (set, bytes)):
+            # 处理集合和字节数据
+            return str(obj)
+        elif hasattr(obj, '__class__'):
+            # 其他对象转换为字符串表示
+            return str(obj)
+        else:
+            raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
+    
+    # def compile_optimizations(self):
+    #     """应用编译优化（如果可用）"""
+    #     if torch.__version__ >= "2" and self.device == "cuda":
+    #         try:
+    #             self.logger.info("正在应用编译优化...")
+    #             torch.set_float32_matmul_precision("high")
+    #             torch._inductor.config.conv_1x1_as_mm = True
+    #             torch._inductor.config.coordinate_descent_tuning = True
+    #             torch._inductor.config.epilogue_fusion = False
+    #             torch._inductor.config.coordinate_descent_check_all_directions = True
+    #             self.pipeline.set_progress_bar_config(disable=True)
+
+    #             self.pipeline.transformer.to(memory_format=torch.channels_last)
+    #             self.pipeline.vae.to(memory_format=torch.channels_last)
+
+    #             self.pipeline.transformer = torch.compile(self.pipeline.transformer, mode="max-autotune", fullgraph=True)
+    #             self.pipeline.vae.decode = torch.compile(self.pipeline.vae.decode, mode="max-autotune", fullgraph=True)
+    #             self.logger.info("编译优化应用完成")
+    #         except Exception as e:
+    #             self.logger.error(f"编译优化失败: {e}")
+        
     def _initialize_model(self):
         """初始化SD3模型管道"""
         if self.pipeline is not None:
@@ -138,10 +194,11 @@ class SD3BatchImageGenerator:
                 transformer=model_nf4,
                 torch_dtype=torch.bfloat16
             )
-            
-            # 启用CPU卸载以节省显存[2](@ref)
+            # self.pipeline = StableDiffusion3Pipeline.from_pretrained(self.model_dir, torch_dtype=torch.bfloat16)
+            # self.pipeline = self.pipeline.to(self.device)
+            # 启用CPU卸载以节省显存[1](@ref)
             self.pipeline.enable_model_cpu_offload()
-            
+            # self.compile_optimizations()
             # 初始化生成器
             self.generator = torch.Generator(device=self.device).manual_seed(42)
             
@@ -152,7 +209,7 @@ class SD3BatchImageGenerator:
             raise
     
     def _cleanup_memory(self):
-        """清理内存和显存[6,7](@ref)"""
+        """清理内存和显存"""
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
             torch.cuda.synchronize()
@@ -177,7 +234,7 @@ class SD3BatchImageGenerator:
                 max_sequence_length=512,
             ).images[0]
             
-            # 保存图片，使用6位数字命名[9](@ref)
+            # 保存图片，使用6位数字命名
             filename = f"{index:06d}.png"
             filepath = os.path.join(self.output_dir, filename)
             image.save(filepath)
@@ -225,11 +282,9 @@ class SD3BatchImageGenerator:
         if start_index > self.start_index:
             self.logger.info(f"从断点恢复，开始索引: {start_index}")
         
-        # 设置开始时间
+        # 设置开始时间 - 使用普通时间戳而不是CUDA事件[6](@ref)
         if self.checkpoint_data["start_time"] is None:
-            self.checkpoint_data["start_time"] = torch.cuda.Event(enable_timing=True) if torch.cuda.is_available() else None
-            self.checkpoint_data["start_time"] = torch.cuda.Event(enable_timing=True)
-            self.checkpoint_data["start_time"].record()
+            self.checkpoint_data["start_time"] = time.time()  # 使用普通时间戳
         
         self.logger.info(f"开始批量生成，从索引 {start_index} 到 {min(len(self.prompts), self.max_images) - 1}")
         
@@ -254,7 +309,7 @@ class SD3BatchImageGenerator:
                 self.checkpoint_data["last_index"] = i
                 self.checkpoint_data["total_generated"] = successful_count
                 
-                # 每batch_size张图片或最后一张图片时保存检查点并清理内存[8](@ref)
+                # 每batch_size张图片或最后一张图片时保存检查点并清理内存
                 if (i - start_index + 1) % batch_size == 0 or i == min(len(self.prompts), self.max_images) - 1:
                     self._save_checkpoint(self.checkpoint_data)
                     self._cleanup_memory()
@@ -275,10 +330,14 @@ class SD3BatchImageGenerator:
     
     def _get_generation_stats(self) -> Dict[str, int]:
         """获取生成统计信息"""
+        total = min(len(self.prompts), self.max_images)
+        generated_count = len(self.checkpoint_data["generated_indices"])
+        completion_rate = (generated_count / total * 100) if total > 0 else 0
+        
         return {
-            "total_generated": len(self.checkpoint_data["generated_indices"]),
+            "total_generated": generated_count,
             "total_failed": len(self.checkpoint_data["failed_indices"]),
-            "completion_rate": len(self.checkpoint_data["generated_indices"]) / min(len(self.prompts), self.max_images) * 100
+            "completion_rate": completion_rate
         }
     
     def get_failed_indices(self) -> List[int]:

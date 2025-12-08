@@ -1,4 +1,6 @@
 dataset/prompts/
 dataset/test/
 dataset/origin
+dataset/jsons
+
 models/
