@@ -16,7 +16,7 @@ if torch.cuda.is_available():
     print(f"输入张量设备: {gpu_image.device}")
 
     # 实例化 GPU 攻击者
-    gpu_scaler = AttackerFactory.create_attacker("cropping", params={"crop_ratio":0.25,"crop_start_h":0,"crop_start_w":0})
+    gpu_scaler = AttackerFactory.create_attacker("gaussian_noise", params={})
     
     # 执行攻击
     gpu_scaled_attack = gpu_scaler.attack(gpu_image)
