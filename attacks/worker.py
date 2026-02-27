@@ -21,7 +21,7 @@ try:
         module = importlib.import_module(name)
     print("子模块导入成功")
 except ImportError:
-    pass # 具体根据你的模块结构调整
+    pass
 
 def main():
     parser = argparse.ArgumentParser(description="Worker process for specific conda env")

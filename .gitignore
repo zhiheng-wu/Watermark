@@ -1,6 +1,3 @@
-dataset/prompts/
-dataset/test/
-dataset/origin
-dataset/jsons
+dataset/
 
 models/
