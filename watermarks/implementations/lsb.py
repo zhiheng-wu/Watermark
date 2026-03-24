@@ -3,7 +3,7 @@ import numpy as np
 from pathlib import Path
 from watermarks.core import WatermarkerFactory, BaseWatermarker
 
-# 注册到工厂，假设该算法不需要特殊的 conda 环境，使用默认环境（None）
+# 注册到工厂，该算法不需要特殊的 conda 环境，使用默认环境（None）
 @WatermarkerFactory.register("lsb", conda_env=None)
 class LSB(BaseWatermarker):
     def __init__(self, **kwargs):
@@ -25,7 +25,6 @@ class LSB(BaseWatermarker):
             raise FileNotFoundError(f"Image not found: {src_path}")
         
         # 展平图像以便于线性处理像素流
-        # 注意：实际应用中通常会先混洗(shuffle)像素位置以提高安全性，这里为了演示直接顺序嵌入
         flat_img = img.flatten()
         
         # 2. 检查容量

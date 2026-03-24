@@ -1,0 +1,54 @@
+Date : 2026-03-01 15:45:14
+Directory : d:\graduation\computer\Watermark
+Total : 21 files,  1274 codes, 401 comments, 380 blanks, all 2055 lines
+
+Languages
++----------+------------+------------+------------+------------+------------+
+| language | files      | code       | comment    | blank      | total      |
++----------+------------+------------+------------+------------+------------+
+| Python   |         20 |      1,264 |        401 |        379 |      2,044 |
+| Markdown |          1 |         10 |          0 |          1 |         11 |
++----------+------------+------------+------------+------------+------------+
+
+Directories
++--------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                           | files      | code       | comment    | blank      | total      |
++--------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                              |         21 |      1,274 |        401 |        380 |      2,055 |
+| . (Files)                                                                      |          3 |         77 |         12 |         15 |        104 |
+| attacks                                                                        |          9 |        413 |        141 |        128 |        682 |
+| attacks (Files)                                                                |          3 |        105 |         25 |         24 |        154 |
+| attacks\implementations                                                        |          6 |        308 |        116 |        104 |        528 |
+| utils                                                                          |          1 |         93 |         15 |         23 |        131 |
+| watermarks                                                                     |          8 |        691 |        233 |        214 |      1,138 |
+| watermarks (Files)                                                             |          3 |        225 |         73 |         59 |        357 |
+| watermarks\implementations                                                     |          5 |        466 |        160 |        155 |        781 |
++--------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++--------------------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| filename                                                                       | language | code       | comment    | blank      | total      |
++--------------------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| d:\graduation\computer\Watermark\README.md                                     | Markdown |         10 |          0 |          1 |         11 |
+| d:\graduation\computer\Watermark\attack_test.py                                | Python   |         22 |          3 |          7 |         32 |
+| d:\graduation\computer\Watermark\attacks\__init__.py                           | Python   |          0 |          0 |          1 |          1 |
+| d:\graduation\computer\Watermark\attacks\core.py                               | Python   |         63 |         18 |         15 |         96 |
+| d:\graduation\computer\Watermark\attacks\implementations\__init__.py           | Python   |          0 |          0 |          1 |          1 |
+| d:\graduation\computer\Watermark\attacks\implementations\ai_attack.py          | Python   |         40 |         24 |         12 |         76 |
+| d:\graduation\computer\Watermark\attacks\implementations\geometry_attack.py    | Python   |        104 |         25 |         31 |        160 |
+| d:\graduation\computer\Watermark\attacks\implementations\pattern_estimation.py | Python   |         75 |         25 |         26 |        126 |
+| d:\graduation\computer\Watermark\attacks\implementations\signal_attack.py      | Python   |         68 |         34 |         28 |        130 |
+| d:\graduation\computer\Watermark\attacks\implementations\test.py               | Python   |         21 |          8 |          6 |         35 |
+| d:\graduation\computer\Watermark\attacks\worker.py                             | Python   |         42 |          7 |          8 |         57 |
+| d:\graduation\computer\Watermark\utils\monitor.py                              | Python   |         93 |         15 |         23 |        131 |
+| d:\graduation\computer\Watermark\watermark_test.py                             | Python   |         45 |          9 |          7 |         61 |
+| d:\graduation\computer\Watermark\watermarks\__init__.py                        | Python   |          0 |          0 |          1 |          1 |
+| d:\graduation\computer\Watermark\watermarks\core.py                            | Python   |        177 |         50 |         47 |        274 |
+| d:\graduation\computer\Watermark\watermarks\implementations\cin.py             | Python   |        117 |         41 |         36 |        194 |
+| d:\graduation\computer\Watermark\watermarks\implementations\dwt.py             | Python   |         83 |         21 |         31 |        135 |
+| d:\graduation\computer\Watermark\watermarks\implementations\dwt_svd.py         | Python   |         82 |         18 |         29 |        129 |
+| d:\graduation\computer\Watermark\watermarks\implementations\lsb.py             | Python   |         79 |         30 |         27 |        136 |
+| d:\graduation\computer\Watermark\watermarks\implementations\mbrs.py            | Python   |        105 |         50 |         32 |        187 |
+| d:\graduation\computer\Watermark\watermarks\worker.py                          | Python   |         48 |         23 |         11 |         82 |
+| Total                                                                          |          |      1,274 |        401 |        380 |      2,055 |
++--------------------------------------------------------------------------------+----------+------------+------------+------------+------------+

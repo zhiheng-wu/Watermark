@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Dict, Any, List, Tuple
 
 class BaseWatermarker(ABC):
-    def __init__(self, sampling_ratio: float = 1.0, seed: int = 42, **kwargs):
+    def __init__(self, sampling_ratio: float = 0.05, seed: int = 42, **kwargs):
         self.sampling_ratio = sampling_ratio
         self.seed = seed
         self.params = kwargs
@@ -245,6 +245,7 @@ class CrossEnvProxy(BaseWatermarker):
             cmd.extend(["--clean_source", str(clean_source)])
 
         print(f"[Proxy] Calling {self.method_name} [{mode}]...")
+        print(f"[Proxy] Command: {' '.join(cmd)}")
         subprocess.run(cmd, check=True, text=True)
     
     def embed_one(self, src_path: Path, dst_path: Path):

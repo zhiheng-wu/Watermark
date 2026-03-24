@@ -2,7 +2,7 @@ from watermarks.core import WatermarkerFactory
 import watermarks.implementations
 import importlib
 import pkgutil
-from utils.monitor import WatermarkProfiler
+from utils.monitor import WatermarkProfiler # type: ignore
 
 imported_modules = {}
 package = watermarks.implementations
@@ -26,6 +26,7 @@ mix_ratio = 0.5
 input_folder = "D:/graduation/computer/Watermark/dataset/origin"
 output_folder = "D:/graduation/computer/Watermark/dataset/watermarked"
 threshold = 0.05
+prompt_input_folder = 'D:/graduation/computer/Watermark/dataset/prompts/stable_diffusion_prompts'
 # mbrs
 secret_64 = [1,0,1,0, 0,1,0,1, 1,1,0,0, 0,0,1,1,
              1,0,0,1, 0,1,1,0, 1,1,1,0, 0,0,0,1,
@@ -37,18 +38,18 @@ secret_30 = [1,0,1,0, 0,1,0,1, 1,1,0,0, 0,0,1,1,
 # ============== 测试水印嵌入与提取 ================
 def run_experiment():
     attacker = WatermarkerFactory.create(
-        name="cin",
+        name="tree_ring",
         params={
-            "sampling_ratio": sampling_ratio,
-            "seed": seed,
-            "secret": secret_30
-        },
+            'image_length': 512,
+            'seed': seed,
+            'max_images':10
+        }
     )
 
     
     # 这一步会自动检测环境，如果不匹配则调用 worker.py
     with WatermarkProfiler(str(attacker.__class__.__name__)+'_embedding'):
-        attacker.embed_batch(input_folder, output_folder)
+        attacker.embed_batch(prompt_input_folder, output_folder)
     with WatermarkProfiler(str(attacker.__class__.__name__)+'_extraction'):
         result = attacker.extract_batch(
             image_dir_to_check=output_folder,
