@@ -38,18 +38,17 @@ secret_30 = [1,0,1,0, 0,1,0,1, 1,1,0,0, 0,0,1,1,
 # ============== 测试水印嵌入与提取 ================
 def run_experiment():
     attacker = WatermarkerFactory.create(
-        name="tree_ring",
+        name='mbrs',
         params={
-            'image_length': 512,
-            'seed': seed,
-            'max_images':10
+            'secret': secret_64,
+            'sampling_ratio': sampling_ratio
         }
     )
 
     
     # 这一步会自动检测环境，如果不匹配则调用 worker.py
     with WatermarkProfiler(str(attacker.__class__.__name__)+'_embedding'):
-        attacker.embed_batch(prompt_input_folder, output_folder)
+        attacker.embed_batch(input_folder, output_folder)
     with WatermarkProfiler(str(attacker.__class__.__name__)+'_extraction'):
         result = attacker.extract_batch(
             image_dir_to_check=output_folder,

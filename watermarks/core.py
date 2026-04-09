@@ -130,7 +130,8 @@ class BaseWatermarker(ABC):
                 extracted_data = self.extract_one(f_path)
                 distance = self.calculate_distance(self.secret, extracted_data)
                 # 判定
-                is_detected = distance < threshold
+                distance_val = float(distance) 
+                is_detected = bool(distance_val < threshold)
                 
                 # 记录详情
                 file_key = f"{'WM' if is_wm_gt else 'CLN'}_{f_path.name}"
@@ -219,11 +220,15 @@ class CrossEnvProxy(BaseWatermarker):
         self._run_worker("extract", 
                          input_path=image_dir_to_check, 
                          clean_source=clean_source_arg)
-        return {} # 依然由 Worker 打印 JSON
+        result = self._run_worker("extract", 
+                              input_path=image_dir_to_check, 
+                              clean_source=clean_source_arg)
+        return result # 不再返回 {}，而是返回 worker 传过来的真实字典
 
     def _run_worker(self, mode, input_path, output_path=None, clean_source=None):
         current_dir = Path(__file__).parent.absolute()
         worker_script = current_dir / "worker.py"
+        import json
         params_json = json.dumps(self.params)
         
         conda_base = Path(r"D:/ProgramSoftware/anaconda3/envs")
@@ -245,8 +250,34 @@ class CrossEnvProxy(BaseWatermarker):
             cmd.extend(["--clean_source", str(clean_source)])
 
         print(f"[Proxy] Calling {self.method_name} [{mode}]...")
-        print(f"[Proxy] Command: {' '.join(cmd)}")
-        subprocess.run(cmd, check=True, text=True)
+        process = subprocess.run(cmd, capture_output=True, text=True)
+        
+        # 1. 打印正常输出
+        if process.stdout:
+            print(process.stdout)
+            
+        # 2. 打印错误输出（这才是找出问题的关键）
+        if process.stderr:
+            import sys
+            # 为了醒目，加个前缀和红色（如果在 Jupyter 里支持颜色的话）
+            print("\n" + "="*20 + " [Worker 报错详情开始] " + "="*20, file=sys.stderr)
+            print(process.stderr, file=sys.stderr)
+            print("="*20 + " [Worker 报错详情结束] " + "="*20 + "\n", file=sys.stderr)
+            
+        # 3. 此时我们再抛出异常，阻止程序继续往下执行错误逻辑
+        if process.returncode != 0:
+            raise RuntimeError(f"Worker for {self.method_name} failed. Check the error log above.")
+            
+        # 4. 只有没报错才解析 JSON
+        if mode == "extract":
+            try:
+                out_text = process.stdout
+                json_str = out_text.split("<<<JSON_START>>>")[1].split("<<<JSON_END>>>")[0].strip()
+                import json
+                return json.loads(json_str)
+            except IndexError:
+                print("[Proxy] Failed to parse JSON from worker output. Returning empty dict.")
+                return {}
     
     def embed_one(self, src_path: Path, dst_path: Path):
         raise NotImplementedError("CrossEnvProxy does not support embed_one directly.")

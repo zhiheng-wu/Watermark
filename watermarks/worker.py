@@ -41,6 +41,7 @@ def main():
     try:
         params = json.loads(args.params)
     except:
+        print(f"[Worker] ❌ Failed to parse params: {args.params}")
         sys.exit(1)
     
     try:
@@ -67,16 +68,22 @@ def main():
         # 调用更新后的 extract_batch
         # args.input -> 水印图目录
         # args.clean_source -> 原图目录
-        results = watermarker.extract_batch(
-            image_dir_to_check=args.input,
-            threshold=threshold,
-            clean_dir=args.clean_source,
-            mix_ratio=mix_ratio
-        )
-        
-        # print("\n<<<JSON_START>>>")
-        # print(json.dumps(results))
-        # print("<<<JSON_END>>>")
+        try:
+            results = watermarker.extract_batch(
+                image_dir_to_check=args.input,
+                threshold=threshold,
+                clean_dir=args.clean_source,
+                mix_ratio=mix_ratio
+            )
+            print("\n<<<JSON_START>>>")
+            print(json.dumps(results))
+            print("<<<JSON_END>>>")
+        except Exception as e:
+            print(f"[Worker] ❌ Failed during extraction")
+            print("-" * 20)
+            traceback.print_exc() 
+            print("-" * 20)
+            sys.exit(1)
 
 if __name__ == "__main__":
     main()
